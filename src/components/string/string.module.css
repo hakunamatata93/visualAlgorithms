@@ -8,8 +8,7 @@
   
   .circles {
     width: 1040px;
-    display: grid;
-    grid-template-columns: repeat(11, 1fr);
     margin: 120px auto 0;
-  
+    display: flex;
+    justify-content: center;  
   }
