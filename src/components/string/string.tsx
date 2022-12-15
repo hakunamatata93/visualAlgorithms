@@ -29,29 +29,31 @@ export const StringComponent: React.FC = () => {
     )
 
     setShowValue(inputs)
-    let i = 0
+    let arr = [...inputs]
 
-    let x = setInterval(() => {
+    for(let i = 0; i < arr.length/2; i++) {
+      setTimeout(() => {
 
-      let arr = [...inputs]
+        let start = i;
+        let end = arr.length - 1 - start;
+        arr[start].state = ElementStates.Changing;
+        arr[end].state = ElementStates.Changing;
+        setShowValue([...arr]);
 
-      arr[i] = {
-        symbol: inputs[inputs.length - 1 - i].symbol,
-        state: ElementStates.Changing
-      }
-      arr[arr.length - 1 - i] = {
-        symbol: inputs[i].symbol,
-        state: ElementStates.Changing
-      }
-
-      i = i + 1
-      if (i > arr.length/2) {
-        clearInterval(x)
-      }
-
-      setShowValue(arr)
-
-    }, 1000)
+        setTimeout(() => {
+          let curr = arr[start].symbol;
+          arr[start] = {
+            symbol: arr[end].symbol,
+            state: ElementStates.Modified,
+          };
+          arr[end] = {
+            symbol: curr,
+            state: ElementStates.Modified,
+          }
+          setShowValue([...arr]);
+        }, 1000);
+      }, 1000 * i);
+    }
 
   }, [inputValue])
 
@@ -61,7 +63,6 @@ export const StringComponent: React.FC = () => {
         <Input 
           maxLength={11}
           isLimitText
-          extraClass = ""
           onChange = {(e) => setInputValue(e.currentTarget.value)}
         />
         <Button onClick={onButtonClick}
