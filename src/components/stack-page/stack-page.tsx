@@ -6,6 +6,7 @@ import styles from "./stack-page.module.css";
 import { Circle } from "../ui/circle/circle";
 import { ElementStates } from "../../types/element-states";
 import { Stack } from "./utils";
+import { SHORT_DELAY_IN_MS } from "../../constants/delays";
 
 
 interface IStack {
@@ -17,11 +18,13 @@ const stack = new Stack<IStack>();
 
 export const StackPage: React.FC = () => {
 
-  const [inputValue, setInputValue] = useState('')
-  const [showValue, setShowValue] = useState<any>([])
+  const [inputValue, setInputValue] = useState<string>('');
+  const [showValue, setShowValue] = useState<IStack[]>([]);
+  const [loader, setLoader] = useState<boolean>(false);
 
   const onValueAdd = () => {
     if (!inputValue) return;
+    setLoader(true);
 
     stack.push({ letter: inputValue, state: ElementStates.Changing });
     setInputValue('')
@@ -33,11 +36,12 @@ export const StackPage: React.FC = () => {
         state: ElementStates.Default,
       });
       setShowValue([...stack.elements]);
-
-    }, 500);
+      setLoader(false);
+    }, SHORT_DELAY_IN_MS);
   }
 
   const onValueDelete = () => {
+    setLoader(true);
 
     stack.setByIndex(stack.size - 1, {
       letter: stack.elements[stack.size - 1].letter,
@@ -49,13 +53,13 @@ export const StackPage: React.FC = () => {
     setTimeout(() => {
       stack.pop();
       setShowValue([...stack.elements]);
-    }, 500);
-    
+    }, SHORT_DELAY_IN_MS);
+    setLoader(false);    
   }
 
   const onValuesClear = () => {
     stack.clear();
-    setShowValue('');
+    setShowValue([...stack.elements]);
   }
 
   return (
@@ -70,9 +74,11 @@ export const StackPage: React.FC = () => {
           />
           <Button onClick={onValueAdd}
             text='Добавить'
+            disabled={loader}
           />
           <Button onClick={onValueDelete}
             text='Удалить'
+            disabled={loader}
           />
         </div>
 
@@ -82,13 +88,11 @@ export const StackPage: React.FC = () => {
       </section>
 
       <section className={styles.circles}>
-      
         {showValue.length > 0 &&
           showValue.map((item: any, index: any) => {
             return (
               <Circle
                 letter={item.letter}
-                //index={index}
                 key={index}
                 state={item.state}
                 head={`${index === showValue.length - 1 ? 'top' : ''}`}
