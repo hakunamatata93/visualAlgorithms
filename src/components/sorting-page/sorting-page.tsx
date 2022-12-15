@@ -127,12 +127,12 @@ export const SortingPage: React.FC = () => {
     selectionSort(showArray, 'descending')
   }
   
-  // 2 в 1 по возрастанию
+
   const onClickSortAsc = () => {
     isRadioSelected("radioBubble") ? onClickBubbleSortAsc() : onClickSelectionSortAsc()
   }
 
-  // 2 в 1 по убыванию
+
   const onClickSortDesc = () => {
     isRadioSelected("radioBubble") ? onClickBubbleSortDesc() : onClickSelectionSortDesc()
   }
