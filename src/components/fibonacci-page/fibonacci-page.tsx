@@ -12,6 +12,10 @@ export const FibonacciPage: React.FC = () => {
   const [showValue, setShowValue] = useState<number[]>([]);
   const [loader, setLoader] = useState<boolean>(false);
 
+  const onChange = (evt: React.ChangeEvent<HTMLInputElement>) => {
+    setInputValue(evt.target.value);
+  }
+
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoader(true);
@@ -50,20 +54,22 @@ export const FibonacciPage: React.FC = () => {
           isLimitText
           max={19}
           type=''
-          onChange={(e) => setInputValue(e.currentTarget.value)}
+          onChange={onChange}
+          value={inputValue}
         />
         <Button 
           type='submit'
           text='Рассчитать'
           isLoader={loader}
+          disabled={!inputValue || Number(inputValue) < 0 || Number(inputValue) > 19 }
         />
       </form>
       <div className={styles.circles}>
         {
-          showValue.map((item: any, index: any) => {
+          showValue.map((item, index) => {
             return (
               <Circle
-                letter={item}
+                letter={String(item)}
                 index={index}
                 key={index}
               />

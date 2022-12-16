@@ -7,43 +7,48 @@ import { ArrowIcon } from "../ui/icons/arrow-icon";
 import { Circle } from "../ui/circle/circle";
 import { ElementStates } from "../../types/element-states";
 import { LinkedList } from "./utils";
+import { SHORT_DELAY_IN_MS } from "../../constants/delays";
 
 const linkedList = new LinkedList(
-  new Array(6)
-    .fill('')
-    .map(item => (item + Math.floor(Math.random() * 100)).toString())
+  new Array(6).fill('').map(item => (item + Math.floor(Math.random() * 100)).toString())
 );
-console.log(linkedList)
 
 export const ListPage: React.FC = () => {
 
   const [inputValue, setInputValue] = useState('');
   const [showList, setShowList] = useState<string[]>(linkedList.toString);
   const [index, setIndex] = useState('');
-  const [smallCircleValue, setSmallCircleValue] = useState('');
+  const [extraCircleValue, setExtraCircleValue] = useState('');
   const [topCircleIndex, setTopCircleIndex] = useState(-1);
   const [bottomCircleIndex, setBottomCircleIndex] = useState(-1);
   const [modifiedIndex, setModifiedIndex] = useState(-1);
   const [changingIndexes, setChangingIndexes] = useState<number[]>([]);
-  
+
+  const onChangeValue = (evt: React.ChangeEvent<HTMLInputElement>) => {
+    setInputValue(evt.target.value);
+  }
+
+  const onChangeIndex = (evt: React.ChangeEvent<HTMLInputElement>) => {
+    setIndex(evt.target.value);
+  }
 
   function addToHead() {
     if (!inputValue) return null;
 
     linkedList.prepend(inputValue);
     setTopCircleIndex(0);
-    setSmallCircleValue(inputValue);
+    setExtraCircleValue(inputValue);
 
     setTimeout(() => {
       setShowList(linkedList.toString);
       setTopCircleIndex(-1);
-      setSmallCircleValue('');
+      setExtraCircleValue('');
       setModifiedIndex(0);
 
       setTimeout(() => {
         setModifiedIndex(-1);
-      }, 500);
-    }, 500);
+      }, SHORT_DELAY_IN_MS);
+    }, SHORT_DELAY_IN_MS);
   }
 
   function addToTail() {
@@ -51,28 +56,28 @@ export const ListPage: React.FC = () => {
 
     linkedList.append(inputValue);
     setTopCircleIndex(showList.length - 1);
-    setSmallCircleValue(inputValue);
+    setExtraCircleValue(inputValue);
 
     setTimeout(() => {
       setShowList(linkedList.toString);
       setTopCircleIndex(-1);
-      setSmallCircleValue('');
+      setExtraCircleValue('');
       setModifiedIndex(linkedList.toString.length - 1);
 
       setTimeout(() => {
         setModifiedIndex(-1);
-      }, 500);
-    }, 500);
+      }, SHORT_DELAY_IN_MS);
+    }, SHORT_DELAY_IN_MS);
   }
 
   function removeFromHead() {
 
     linkedList.deleteHead();
     setBottomCircleIndex(0);
-    setSmallCircleValue(showList[0] as string);
+    setExtraCircleValue(showList[0] as string);
     setShowList(
-      showList.map((item, i) => {
-        if (i === 0) {
+      showList.map((item, index) => {
+        if (index === 0) {
           item = '';
           return item;
         } else {
@@ -84,18 +89,18 @@ export const ListPage: React.FC = () => {
     setTimeout(() => {
       setShowList(linkedList.toString);
       setBottomCircleIndex(-1);
-      setSmallCircleValue('');
-    }, 500);
+      setExtraCircleValue('');
+    }, SHORT_DELAY_IN_MS);
   }
 
   function removeFromTail() {
 
     linkedList.deleteTail();
     setBottomCircleIndex(showList.length - 1);
-    setSmallCircleValue(showList[showList.length - 1] as string);
+    setExtraCircleValue(showList[showList.length - 1] as string);
     setShowList(
-      showList.map((item, i) => {
-        if (i === showList.length - 1) {
+      showList.map((item, index) => {
+        if (index === showList.length - 1) {
           item = '';
           return item;
         } else {
@@ -107,8 +112,8 @@ export const ListPage: React.FC = () => {
     setTimeout(() => {
       setShowList(linkedList.toString);
       setBottomCircleIndex(-1);
-      setSmallCircleValue('');
-    }, 500);
+      setExtraCircleValue('');
+    }, SHORT_DELAY_IN_MS);
   }
 
   function addByIndex() {
@@ -124,12 +129,12 @@ export const ListPage: React.FC = () => {
     linkedList.addByIndex(inputValue, parseInt(index));
     let counter = 0;
     setTopCircleIndex(0);
-    setSmallCircleValue(inputValue);
+    setExtraCircleValue(inputValue);
     const arr: number[] = [];
     const interval = setInterval(() => {
       if (counter === parseInt(index)) {
         setTopCircleIndex(-1);
-        setSmallCircleValue('');
+        setExtraCircleValue('');
 
         setChangingIndexes([]);
         setModifiedIndex(parseInt(index));
@@ -137,7 +142,7 @@ export const ListPage: React.FC = () => {
 
         setTimeout(() => {
           setModifiedIndex(-1);
-        }, 500);
+        }, SHORT_DELAY_IN_MS);
 
         clearInterval(interval);
         return;
@@ -147,7 +152,7 @@ export const ListPage: React.FC = () => {
       setChangingIndexes([...arr]);
       counter++;
       setTopCircleIndex(counter);
-    }, 500);
+    }, SHORT_DELAY_IN_MS);
   }
 
   function removeByIndex() {
@@ -161,7 +166,7 @@ export const ListPage: React.FC = () => {
     const interval = setInterval(() => {
       if (counter === parseInt(index)) {
         setBottomCircleIndex(parseInt(index));
-        setSmallCircleValue(showList[parseInt(index)] as string);
+        setExtraCircleValue(showList[parseInt(index)] as string);
         arr.pop();
         setChangingIndexes([...arr]);
         setShowList(
@@ -180,19 +185,19 @@ export const ListPage: React.FC = () => {
         setTimeout(() => {
           setChangingIndexes([]);
           setBottomCircleIndex(-1);
-          setSmallCircleValue('');
+          setExtraCircleValue('');
           setShowList(linkedList.toString);
-        }, 500);
+        }, SHORT_DELAY_IN_MS);
         return;
       }
 
       counter++;
       arr.push(counter);
       setChangingIndexes([...arr]);
-    }, 500);
+    }, SHORT_DELAY_IN_MS);
   }
 
-  function applyCircleState(index: number): ElementStates {
+  function showColor(index: number): ElementStates {
     if (index === modifiedIndex) return ElementStates.Modified;
     if (changingIndexes.includes(index)) return ElementStates.Changing;
     return ElementStates.Default;
@@ -211,9 +216,7 @@ export const ListPage: React.FC = () => {
               maxLength={4}
               isLimitText
               value={inputValue}
-              onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                setInputValue(e.target.value)
-              }
+              onChange={onChangeValue}
             />
             <Button 
               text='Добавить в head'
@@ -242,9 +245,7 @@ export const ListPage: React.FC = () => {
               maxLength={1}
               placeholder='Введите индекс'
               value={index}
-              onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                setIndex(e.target.value)
-              }
+              onChange={onChangeIndex}
             />
             <Button 
               text='Добавить по индексу'
@@ -261,12 +262,12 @@ export const ListPage: React.FC = () => {
       </section>
 
       <section className={styles.circles}>
-        {showList.map((item, i) => {
+        {showList.map((item, index) => {
           return (
-            <div className={styles.mainCircles} key={i}>
-              {i === topCircleIndex && (
+            <div className={styles.container} key={index}>
+              {index === topCircleIndex && (
                 <Circle
-                  letter={smallCircleValue}
+                  letter={extraCircleValue}
                   extraClass={styles.topSmallCircle}
                   isSmall={true}
                   state={ElementStates.Changing}
@@ -274,18 +275,18 @@ export const ListPage: React.FC = () => {
               )}
               <div className={styles.circleAndArrow} key={item}>
                 <Circle
-                  index={i}
+                  index={index}
                   letter={item}
-                  tail={`${i === showList.length - 1 ? 'tail' : ''}`}
-                  head={`${i === 0 ? 'head' : ''}`}
-                  state={applyCircleState(i)}
+                  tail={`${index === showList.length - 1 ? 'tail' : ''}`}
+                  head={`${index === 0 ? 'head' : ''}`}
+                  state={showColor(index)}
                 />
-                {(i !== showList.length - 1) 
+                {(index !== showList.length - 1) 
                     && <ArrowIcon />}
               </div>
-              {i === bottomCircleIndex && (
+              {index === bottomCircleIndex && (
                 <Circle
-                  letter={smallCircleValue}
+                  letter={extraCircleValue}
                   extraClass={styles.bottomSmallCircle}
                   isSmall
                   state={ElementStates.Changing}
@@ -297,4 +298,4 @@ export const ListPage: React.FC = () => {
       </section>
     </SolutionLayout>
   )
-}
+};
