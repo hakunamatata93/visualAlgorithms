@@ -8,9 +8,19 @@ import { Circle } from "../ui/circle/circle";
 import { ElementStates } from "../../types/element-states";
 import { LinkedList } from "./utils";
 import { SHORT_DELAY_IN_MS } from "../../constants/delays";
+import { LIST_INIT_LENGTH } from "../../constants/length";
+
+type TLinkedListLoaderState = {
+  addToHead: boolean;
+  addToTail: boolean;
+  removeFromHead: boolean;
+  removeFromTail: boolean;
+  addByIndex: boolean;
+  removeByIndex: boolean;
+};
 
 const linkedList = new LinkedList(
-  new Array(6).fill('').map(item => (item + Math.floor(Math.random() * 100)).toString())
+  new Array(LIST_INIT_LENGTH).fill('').map(item => (item + Math.floor(Math.random() * 100)).toString())
 );
 
 export const ListPage: React.FC = () => {
@@ -23,6 +33,14 @@ export const ListPage: React.FC = () => {
   const [bottomCircleIndex, setBottomCircleIndex] = useState(-1);
   const [modifiedIndex, setModifiedIndex] = useState(-1);
   const [changingIndexes, setChangingIndexes] = useState<number[]>([]);
+  const [loaderState, setLoaderState] = useState<TLinkedListLoaderState>({
+    addToHead: false,
+    addToTail: false,
+    removeFromHead: false,
+    removeFromTail: false,
+    addByIndex: false,
+    removeByIndex: false,
+  });
 
   const onChangeValue = (evt: React.ChangeEvent<HTMLInputElement>) => {
     setInputValue(evt.target.value);
@@ -33,6 +51,7 @@ export const ListPage: React.FC = () => {
   }
 
   function addToHead() {
+    setLoaderState({ ...loaderState, addToHead: true });
     if (!inputValue) return null;
 
     linkedList.prepend(inputValue);
@@ -47,11 +66,13 @@ export const ListPage: React.FC = () => {
 
       setTimeout(() => {
         setModifiedIndex(-1);
+        setLoaderState({ ...loaderState, addToHead: false });
       }, SHORT_DELAY_IN_MS);
     }, SHORT_DELAY_IN_MS);
   }
 
   function addToTail() {
+    setLoaderState({ ...loaderState, addToTail: true });
     if (!inputValue) return null;
 
     linkedList.append(inputValue);
@@ -66,11 +87,13 @@ export const ListPage: React.FC = () => {
 
       setTimeout(() => {
         setModifiedIndex(-1);
+        setLoaderState({ ...loaderState, addToTail: false });
       }, SHORT_DELAY_IN_MS);
     }, SHORT_DELAY_IN_MS);
   }
 
   function removeFromHead() {
+    setLoaderState({ ...loaderState, removeFromHead: true });
 
     linkedList.deleteHead();
     setBottomCircleIndex(0);
@@ -90,10 +113,12 @@ export const ListPage: React.FC = () => {
       setShowList(linkedList.toString);
       setBottomCircleIndex(-1);
       setExtraCircleValue('');
+      setLoaderState({ ...loaderState, removeFromHead: false });
     }, SHORT_DELAY_IN_MS);
   }
 
   function removeFromTail() {
+    setLoaderState({ ...loaderState, removeFromTail: true });
 
     linkedList.deleteTail();
     setBottomCircleIndex(showList.length - 1);
@@ -113,35 +138,39 @@ export const ListPage: React.FC = () => {
       setShowList(linkedList.toString);
       setBottomCircleIndex(-1);
       setExtraCircleValue('');
+      setLoaderState({ ...loaderState, removeFromTail: false });
     }, SHORT_DELAY_IN_MS);
   }
 
   function addByIndex() {
+    setLoaderState({ ...loaderState, addByIndex: true });
+
     if (
       !index ||
       !inputValue ||
-      parseInt(index) < 0 ||
-      parseInt(index) >= showList.length
+      Number(index) < 0 ||
+      Number(index) >= showList.length
     ) {
       return null;
     }
 
-    linkedList.addByIndex(inputValue, parseInt(index));
+    linkedList.addByIndex(inputValue, Number(index));
     let counter = 0;
     setTopCircleIndex(0);
     setExtraCircleValue(inputValue);
     const arr: number[] = [];
     const interval = setInterval(() => {
-      if (counter === parseInt(index)) {
+      if (counter === Number(index)) {
         setTopCircleIndex(-1);
         setExtraCircleValue('');
 
         setChangingIndexes([]);
-        setModifiedIndex(parseInt(index));
+        setModifiedIndex(Number(index));
         setShowList(linkedList.toString);
 
         setTimeout(() => {
           setModifiedIndex(-1);
+          setLoaderState({ ...loaderState, addByIndex: false });
         }, SHORT_DELAY_IN_MS);
 
         clearInterval(interval);
@@ -152,26 +181,29 @@ export const ListPage: React.FC = () => {
       setChangingIndexes([...arr]);
       counter++;
       setTopCircleIndex(counter);
+      
     }, SHORT_DELAY_IN_MS);
   }
 
   function removeByIndex() {
-    if (!index || parseInt(index) < 0 || parseInt(index) >= showList.length) return null;
+    setLoaderState({ ...loaderState, removeByIndex: true });
 
-    linkedList.deleteByIndex(parseInt(index));
+    if (!index || Number(index) < 0 || Number(index) >= showList.length) return null;
+
+    linkedList.deleteByIndex(Number(index));
     const arr = [0];
     let counter = 0;
     setChangingIndexes([...arr]);
 
     const interval = setInterval(() => {
-      if (counter === parseInt(index)) {
-        setBottomCircleIndex(parseInt(index));
-        setExtraCircleValue(showList[parseInt(index)] as string);
+      if (counter === Number(index)) {
+        setBottomCircleIndex(Number(index));
+        setExtraCircleValue(showList[Number(index)] as string);
         arr.pop();
         setChangingIndexes([...arr]);
         setShowList(
           showList.map((item, i) => {
-            if (i === parseInt(index)) {
+            if (i === Number(index)) {
               item = '';
               return item;
             } else {
@@ -187,6 +219,7 @@ export const ListPage: React.FC = () => {
           setBottomCircleIndex(-1);
           setExtraCircleValue('');
           setShowList(linkedList.toString);
+          setLoaderState({ ...loaderState, removeByIndex: false });
         }, SHORT_DELAY_IN_MS);
         return;
       }
@@ -222,21 +255,29 @@ export const ListPage: React.FC = () => {
               text='Добавить в head'
               type="submit"
               onClick={addToHead}
+              disabled={!inputValue || showList.length >= 7}
+              isLoader={loaderState.addToHead}
             />
             <Button 
               text='Добавить в tail'
               type="submit"
               onClick={addToTail}
+              disabled={!inputValue || showList.length >= 7}
+              isLoader={loaderState.addToTail}
             />
             <Button 
               text='Удалить из head'
               type="submit"
               onClick={removeFromHead}
+              disabled={!showList.length}
+              isLoader={loaderState.removeFromHead}
             />
             <Button 
               text='Удалить из tail'
               type="submit"
               onClick={removeFromTail}
+              disabled={!showList.length}
+              isLoader={loaderState.removeFromTail}
             />
           </div>
 
@@ -251,11 +292,15 @@ export const ListPage: React.FC = () => {
               text='Добавить по индексу'
               type="submit"
               onClick={addByIndex}
+              disabled={!index || !inputValue}
+              isLoader={loaderState.addByIndex}
             />
             <Button 
               text='Удалить по индексу'
               type="submit"
               onClick={removeByIndex}
+              disabled={!index}
+              isLoader={loaderState.removeByIndex}
             />
           </div>
         </form>
