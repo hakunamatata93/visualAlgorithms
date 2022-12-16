@@ -1,34 +1,39 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useState, FormEvent } from "react";
+import { SolutionLayout } from "../ui/solution-layout/solution-layout";
 import { Input } from "../ui/input/input";
 import { Button } from "../ui/button/button";
 import styles from "./string.module.css";
 import { Circle } from "../ui/circle/circle";
 import { ElementStates } from "../../types/element-states";
-import { SolutionLayout } from "../ui/solution-layout/solution-layout";
+import { DELAY_IN_MS } from "../../constants/delays";
 
-interface StringProps {
+interface ILetterProps {
   symbol: string,
   state?: ElementStates
 }
 
 export const StringComponent: React.FC = () => {
 
-  const [inputValue, setInputValue] = useState('')
+  const [inputValue, setInputValue] = useState<string>('');
+  const [showValue, setShowValue] = useState<ILetterProps[]>([]);
+  const [loader, setLoader] = useState<boolean>(false);
 
-  const [showValue, setShowValue] = useState<StringProps[]>([])
+  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setLoader(true);
+    onButtonClick();
+  };
 
   const onButtonClick = useCallback(() => {
-
-    const inputs = inputValue.split('').map(item=>
-      {
-        return {
-          symbol: item,
-          state: ElementStates.Default
-        }
+    const inputs = inputValue.split('').map(item=> {
+      return {
+        symbol: item,
+        state: ElementStates.Default
       }
-    )
-
+    })
+    
     setShowValue(inputs)
+
     let arr = [...inputs]
 
     for(let i = 0; i < arr.length/2; i++) {
@@ -41,35 +46,38 @@ export const StringComponent: React.FC = () => {
         setShowValue([...arr]);
 
         setTimeout(() => {
-          let curr = arr[start].symbol;
+          let swapedSymbol = arr[start].symbol;
           arr[start] = {
             symbol: arr[end].symbol,
             state: ElementStates.Modified,
           };
           arr[end] = {
-            symbol: curr,
+            symbol: swapedSymbol,
             state: ElementStates.Modified,
           }
           setShowValue([...arr]);
-        }, 1000);
-      }, 1000 * i);
-    }
+          setLoader(false);
+        }, DELAY_IN_MS);
 
+      }, DELAY_IN_MS * i);
+    }
   }, [inputValue])
 
   return (
     <SolutionLayout title="Строка">
-       <section className={styles.main}>
+      <form className={styles.form} onSubmit={(e) => handleSubmit(e)}>
         <Input 
           maxLength={11}
           isLimitText
           onChange = {(e) => setInputValue(e.currentTarget.value)}
         />
-        <Button onClick={onButtonClick}
-          text='Развернуть'/>
-      </section>
-
-      <section className={styles.circles}>
+        <Button
+          type='submit'
+          text='Развернуть'
+          isLoader={loader}
+        />
+      </form>
+      <div className={styles.circles}>
       {
         showValue.map((item, index) => {
           return (
@@ -81,7 +89,7 @@ export const StringComponent: React.FC = () => {
           )
         })
       }
-      </section>
+      </div>
     </SolutionLayout>
-  );
-};
+  )
+}

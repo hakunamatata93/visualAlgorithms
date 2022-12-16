@@ -1,38 +1,23 @@
 import React, { useCallback, useState, ChangeEvent, useEffect } from "react";
 import { SolutionLayout } from "../ui/solution-layout/solution-layout";
-import { Input } from "../ui/input/input";
 import { Button } from "../ui/button/button";
 import styles from "./sorting-page.module.css";
 import { RadioInput } from "../ui/radio-input/radio-input";
 import { Direction } from "../../types/direction";
 import { Column } from "../ui/column/column";
 import { ElementStates } from "../../types/element-states";
+import { swap, delay} from "./utils";
 
-interface LetterProps {
-  symbol: string | number,
+interface INumberProps {
+  symbol: number,
   state?: ElementStates
 }
 
-type TSelector = 'descending' | 'ascending';
-
-const delay = (
-  time: number
-) => new Promise(resolve => setTimeout(resolve, time));
-
-const swap = (
-  arr: LetterProps[], 
-  firstIndex: number, 
-  secondIndex: number
-): void => {
-  const temp = arr[firstIndex].symbol;
-  arr[firstIndex].symbol = arr[secondIndex].symbol;
-  arr[secondIndex].symbol = temp;
-};
-
 export const SortingPage: React.FC = () => {
 
-  const [showArray, setShowArray] = useState<LetterProps[]>([]);
-  const [selectedRadioBtn, setSelectedRadioBtn] = useState("radioSelect");
+  const [showArray, setShowArray] = useState<INumberProps[]>([]);
+  const [selectedRadioBtn, setSelectedRadioBtn] = useState<string>('radioSelect');
+  const [loader, setLoader] = useState<boolean>(false);
 
   const isRadioSelected = (value: string): boolean => selectedRadioBtn === value;
 
@@ -41,7 +26,6 @@ export const SortingPage: React.FC = () => {
   useEffect(() => {
     onArrayGenerate();
   }, [])
-
 
   //генерация случайного массива
   const onArrayGenerate = () => {
@@ -53,12 +37,13 @@ export const SortingPage: React.FC = () => {
     const randomArr = Array(n).fill(null).map(() => Math.floor(Math.random() * 100))
     
     const arr = randomArr.map(symbol => ({symbol, state: ElementStates.Default}))
-   
-    console.log(arr)
+
     setShowArray(arr)
   }
 
-  const bubbleSort = async (arr: LetterProps[], selector: TSelector) => {
+  const bubbleSort = async (arr: INumberProps[], selector: Direction) => {
+    setLoader(true);
+    
     if (arr[0].state !== ElementStates.Default) {
       arr.forEach(item => item.state = ElementStates.Default);
     }
@@ -70,8 +55,8 @@ export const SortingPage: React.FC = () => {
         setShowArray([...arr]);
         await delay(500);
         if (
-          (selector === 'ascending' && arr[j].symbol > arr[j + 1].symbol) ||
-          (selector === 'descending' && arr[j].symbol < arr[j + 1].symbol)
+          (selector === Direction.Ascending && arr[j].symbol > arr[j + 1].symbol) ||
+          (selector === Direction.Descending && arr[j].symbol < arr[j + 1].symbol)
         ) {
           swap(arr, j, j + 1);
         }
@@ -80,9 +65,12 @@ export const SortingPage: React.FC = () => {
       arr[arr.length - i - 1].state = ElementStates.Modified;
     }
     setShowArray([...arr]);
+    setLoader(false);
   }
 
-  const selectionSort = async (arr: LetterProps[], selector: TSelector) => {
+  const selectionSort = async (arr: INumberProps[], selector: Direction) => {
+    setLoader(true);
+    
     if (arr[0].state !== ElementStates.Default) {
       arr.forEach(item => item.state = ElementStates.Default);
     }
@@ -94,47 +82,48 @@ export const SortingPage: React.FC = () => {
         arr[j].state = ElementStates.Changing;
         setShowArray([...arr]);
         await delay(500);
-        if (selector === 'ascending' && arr[minInd].symbol > arr[j].symbol) {
+        if (selector === Direction.Ascending && arr[minInd].symbol > arr[j].symbol) {
           minInd = j;
         }
-        if (selector === 'descending' && arr[maxInd].symbol < arr[j].symbol) {
+        if (selector === Direction.Descending && arr[maxInd].symbol < arr[j].symbol) {
           maxInd = j;
         }
         arr[j].state = ElementStates.Default;
         setShowArray([...arr]);
       }
-      selector === 'ascending' && swap(arr, i, minInd);
-      selector === 'descending' && swap(arr, i, maxInd);
+      selector === Direction.Ascending && swap(arr, i, minInd);
+      selector === Direction.Descending && swap(arr, i, maxInd);
       arr[i].state = ElementStates.Modified;
     }
     arr[arr.length - 1].state = ElementStates.Modified;
     setShowArray([...arr]);
+    setLoader(false);
   }
 
   const onClickBubbleSortAsc = () => {
-    bubbleSort(showArray, 'ascending')
+    bubbleSort(showArray, Direction.Ascending)
   }
 
   const onClickBubbleSortDesc = () => {
-    bubbleSort(showArray, 'descending')
+    bubbleSort(showArray, Direction.Descending)
   }
 
   const onClickSelectionSortAsc = () => {
-    selectionSort(showArray, 'ascending')
+    selectionSort(showArray, Direction.Ascending)
   }
 
   const onClickSelectionSortDesc = () => {
-    selectionSort(showArray, 'descending')
+    selectionSort(showArray, Direction.Descending)
   }
   
-
+  // 2 в 1 по возрастанию
   const onClickSortAsc = () => {
-    isRadioSelected("radioBubble") ? onClickBubbleSortAsc() : onClickSelectionSortAsc()
+    isRadioSelected('radioBubble') ? onClickBubbleSortAsc() : onClickSelectionSortAsc()
   }
 
-
+  // 2 в 1 по убыванию
   const onClickSortDesc = () => {
-    isRadioSelected("radioBubble") ? onClickBubbleSortDesc() : onClickSelectionSortDesc()
+    isRadioSelected('radioBubble') ? onClickBubbleSortDesc() : onClickSelectionSortDesc()
   }
   
   return (
@@ -142,13 +131,13 @@ export const SortingPage: React.FC = () => {
       <section className={styles.main}>
         <div className={styles.radiobutton}>
           <RadioInput 
-            label = "Выбор" 
+            label="Выбор" 
             value="radioSelect"
             checked={isRadioSelected("radioSelect")}
             onChange={changeValue}
           />
           <RadioInput 
-            label = "Пузырёк"
+            label="Пузырёк"
             value="radioBubble"
             checked={isRadioSelected("radioBubble")}
             onChange={changeValue} 
@@ -159,21 +148,25 @@ export const SortingPage: React.FC = () => {
             onClick={onClickSortAsc}
             text='По возрастанию'
             sorting={Direction.Ascending}
+            disabled={loader}           
           />
           <Button 
             onClick={onClickSortDesc}
             text='По убыванию'
             sorting={Direction.Descending}
+            disabled={loader}            
           />
         </div>
-        <Button onClick={onArrayGenerate}
+        <Button 
+          onClick={onArrayGenerate}
           text='Новый массив'
+          disabled={loader}
         />
       </section>
 
       <section className={styles.columns}>
       {
-        showArray.map((item: any, index: any) => {
+        showArray.map((item, index) => {
           return (
             <Column
               index={item.symbol}
@@ -185,5 +178,5 @@ export const SortingPage: React.FC = () => {
       }
       </section>
     </SolutionLayout>
-  );
-};
+  )
+}
