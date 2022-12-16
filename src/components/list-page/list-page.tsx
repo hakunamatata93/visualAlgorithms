@@ -63,6 +63,7 @@ export const ListPage: React.FC = () => {
       setTopCircleIndex(-1);
       setExtraCircleValue('');
       setModifiedIndex(0);
+      setInputValue('')
 
       setTimeout(() => {
         setModifiedIndex(-1);
@@ -84,6 +85,7 @@ export const ListPage: React.FC = () => {
       setTopCircleIndex(-1);
       setExtraCircleValue('');
       setModifiedIndex(linkedList.toString.length - 1);
+      setInputValue('')
 
       setTimeout(() => {
         setModifiedIndex(-1);
@@ -171,6 +173,7 @@ export const ListPage: React.FC = () => {
         setTimeout(() => {
           setModifiedIndex(-1);
           setLoaderState({ ...loaderState, addByIndex: false });
+          setInputValue('')
         }, SHORT_DELAY_IN_MS);
 
         clearInterval(interval);
@@ -220,6 +223,7 @@ export const ListPage: React.FC = () => {
           setExtraCircleValue('');
           setShowList(linkedList.toString);
           setLoaderState({ ...loaderState, removeByIndex: false });
+          setIndex('')
         }, SHORT_DELAY_IN_MS);
         return;
       }
@@ -286,6 +290,7 @@ export const ListPage: React.FC = () => {
               maxLength={1}
               placeholder='Введите индекс'
               value={index}
+              type= 'number'
               onChange={onChangeIndex}
             />
             <Button 
@@ -299,7 +304,7 @@ export const ListPage: React.FC = () => {
               text='Удалить по индексу'
               type="submit"
               onClick={removeByIndex}
-              disabled={!index}
+              disabled={!index || (Number(index) > showList.length - 1 ||  Number(index) < 0)}
               isLoader={loaderState.removeByIndex}
             />
           </div>
